@@ -5,4 +5,8 @@ const WechatMp = require('../src');
 
 const wechatMp = new WechatMp(config);
 
-console.log(wechatMp);
+wechatMp.code2session({
+  jsCode: process.argv[2],
+}).then(res => {
+  console.log(res);
+});

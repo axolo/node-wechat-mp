@@ -8,9 +8,35 @@ Wechat mini program SDK for Node.js.
 yarn install @axolo/node-wechat-mp
 ```
 
+## api
+
+### code2session(params)
+
+see [code2Session]
+
+|  params   |        description        |
+| --------- | ------------------------- |
+| jsCode    | code of wx.login() result |
+| grantType | authorization_code        |
+| method    | GET                       |
+
+return `Promise` of auth session
+
+### decrypt(params)
+
+see [signature]
+
+|    params     |            description            |
+| ------------- | --------------------------------- |
+| sessionKey    | sessionKey of auth.code2session() |
+| encryptedData | encrypted data                    |
+| iv            | iv                                |
+
+return `Object` of decrypted data
+
 ## example
 
-Get auth seesion.
+decrypt data.
 
 ```js
 'use strict';
@@ -24,11 +50,13 @@ const config = {
 
 const wechatMp = new WechatMp(config);
 
-wechatMp.code2session({
-  jsCode: 'WECHAT_MINIPROGRAM_JS_CODE',
-}).then(res => {
-  console.log(res);
+const decrypted = wechatMp.decrypt({
+  sessionKey: 'session_key of code2session()',
+  encryptedData: 'base64 encrypted data',
+  iv: 'base64 iv',
 });
+
+console.log(decrypted);
 ```
 
 ## test
@@ -49,7 +77,7 @@ Add git ignored `config.json` to project directory as:
 See Wechat miniprogram [code2Session] to get js_code.
 
 ```bash
-yarn test WECHAT_MINIPROGRAM_JS_CODE
+node test/code2session.test.js WECHAT_MINIPROGRAM_JS_CODE
 ```
 
 ### result
@@ -65,3 +93,4 @@ Success output like this:
 ```
 
 [code2Session]: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
+[signature]: https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/signature.html

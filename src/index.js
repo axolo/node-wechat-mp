@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const axios = require('axios');
 const WechatMpError = require('./error');
 
@@ -34,6 +35,31 @@ class WechatMp {
     if (!data) throw new this.Error('get auth session fail');
     if (data.errcode) throw new this.Error(JSON.stringify(data));
     return data;
+  }
+
+  /**
+   * **解密数据**
+   *
+   * @param {Object} params { appId, sessionKey, encryptedData, iv }
+   * @return {Object} 解密后的数据
+   * @see https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/signature.html
+   * @memberof WechatService
+   */
+  decrypt(params) {
+    const { sessionKey, encryptedData, iv } = params;
+    const sessionKeyBuffer = Buffer.from(sessionKey, 'base64');
+    const encryptedDataBuffer = Buffer.from(encryptedData, 'base64');
+    const ivBuffer = Buffer.from(iv, 'base64');
+    const decipher = crypto.createDecipheriv('aes-128-cbc', sessionKeyBuffer, ivBuffer);
+    // 设置自动 padding 为 true，删除填充补位
+    decipher.setAutoPadding(true);
+    let decoded = decipher.update(encryptedDataBuffer, 'binary', 'utf8');
+    decoded += decipher.final('utf8');
+    decoded = JSON.parse(decoded);
+    if (decoded.watermark?.appid !== this.config.appId) {
+      throw new this.Error('invalid appId');
+    }
+    return decoded;
   }
 }
 
