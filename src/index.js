@@ -1,35 +1,49 @@
 'use strict';
 
 const crypto = require('crypto');
+const cacheManager = require('cache-manager');
 const axios = require('axios');
 const WechatMpError = require('./error');
 
 class WechatMp {
   constructor(config) {
     const defaultConfig = {
+      error: WechatMpError,
+      cache: cacheManager.caching({ store: 'memory', ttl: 7200 }),
+      http: axios,
       appId: '', // Wechat miniprogram appId
       appSecret: '', // Wechat miniprogram appSecret
-      code2sessionUrl: 'https://api.weixin.qq.com/sns/jscode2session',
-      http: axios,
-      error: WechatMpError,
+      url: {
+        base: 'https://api.weixin.qq.com/cgi-bin',
+        token: 'https://api.weixin.qq.com/cgi-bin/token',
+        code2session: 'https://api.weixin.qq.com/sns/jscode2session',
+      },
     };
-    this.config = { ...defaultConfig, ...config };
-    this.http = this.config.http;
+    this.config = {
+      ...defaultConfig,
+      ...config,
+      url: {
+        ...defaultConfig.url,
+        ...config.url,
+      },
+    };
     this.Error = this.config.error;
+    this.cache = this.config.cache;
+    this.http = this.config.http;
   }
 
   /**
    * **获取当前用户会话信息**
    *
-   * 小程序
-   *
    * @see https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
-   * @param {Object} { jsCode, grantType } 请求参数
+   * @param {Object} options 请求参数
    * @return {Object} 当前用户会话，如：openid（用户唯一标志）、unionid（用户在开放平台的唯一标识符）
    * @memberof WechatSdk
    */
-  async code2session({ jsCode, grantType = 'authorization_code', method = 'GET' }) {
-    const { code2sessionUrl: url, appId, appSecret } = this.config;
+  async code2session(options = {}) {
+    const { jsCode, grantType = 'authorization_code', method = 'GET' } = options;
+    const url = this.config.url.code2session;
+    const { appId, appSecret } = this.config;
     const params = { appid: appId, secret: appSecret, js_code: jsCode, grant_type: grantType };
     const { data } = await this.http({ method, url, params });
     if (!data) throw new this.Error('get auth session fail');
@@ -60,6 +74,46 @@ class WechatMp {
       throw new this.Error('invalid appId');
     }
     return decoded;
+  }
+
+  /**
+   * **获取令牌**
+   *
+   * @param {Object} options 请求参数
+   * @return {Object} 令牌
+   * @see https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
+   * @memberof WechatMp
+   */
+  async token(options = {}) {
+    const { appId, appSecret } = this.config;
+    const cache = await this.cache.get(appId);
+    if (cache) return cache;
+    const { grantType = 'client_credential', method = 'GET' } = options;
+    const url = this.config.url.token;
+    const params = { appid: appId, secret: appSecret, grant_type: grantType };
+    const { data } = await this.http({ method, url, params });
+    if (!data) throw new this.Error('get access token fail');
+    if (data.errcode) throw new this.Error(JSON.stringify(data));
+    const token = await this.cache.set(appId, data);
+    return token;
+  }
+
+  /**
+   * **请求微信API**
+   *
+   * @param {Object} options 请求参数，其中url为短格式
+   * @return {Object} 请求返回
+   * @memberof WechatMp
+   */
+  async request(options = {}) {
+    if (!options.method) options.method = 'GET';
+    options.url = this.config.url.base + options.url;
+    const { access_token } = await this.token();
+    const params = Object.assign({ access_token }, options.params);
+    const { data } = await this.http({ ...options, params });
+    if (!data) throw new this.Error('request fail');
+    if (data.errcode) throw new this.Error(JSON.stringify(data));
+    return data;
   }
 }
 

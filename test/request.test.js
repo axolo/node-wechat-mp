@@ -5,4 +5,11 @@ const config = require('./config');
 
 const wechatMp = new WechatMp(config);
 
-console.log(wechatMp);
+wechatMp.request({
+  url: '/user/info',
+  params: {
+    openid: config.openid,
+  },
+}).then(res => {
+  console.log(res);
+});

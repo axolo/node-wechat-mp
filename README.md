@@ -10,11 +10,27 @@ yarn install @axolo/node-wechat-mp
 
 ## api
 
+### constructor(config)
+
+config params
+
+|      param       |                               description                                |
+| ---------------- | ------------------------------------------------------------------------ |
+| appId            | Wechat miniprogram appId, required                                       |
+| appSecret        | Wechat miniprogram appSecret, required                                   |
+| error            | error class, default `WechatMpError`                                     |
+| cache            | token cache, default [cache-manager] single `memory` caching, ttl `7200` |
+| http             | http client, default [axios]                                             |
+| url              | request url of api                                                       |
+| url.base         | base url, default https://api.weixin.qq.com/cgi-bin                      |
+| url.token        | get token, default  https://api.weixin.qq.com/cgi-bin/token              |
+| url.code2session | code2Session, default https://api.weixin.qq.com/sns/jscode2session       |
+
 ### code2session(params)
 
 see [code2Session]
 
-|  params   |        description        |
+|  param    |        description        |
 | --------- | ------------------------- |
 | jsCode    | code of wx.login() result |
 | grantType | authorization_code        |
@@ -26,13 +42,34 @@ return `Promise` of auth session
 
 see [signature]
 
-|    params     |            description            |
+|    param      |            description            |
 | ------------- | --------------------------------- |
 | sessionKey    | sessionKey of auth.code2session() |
 | encryptedData | encrypted data                    |
 | iv            | iv                                |
 
 return `Object` of decrypted data
+
+### token(options)
+
+get [access token] from caching or request
+
+|       param       |                  description                   |
+| ----------------- | ---------------------------------------------- |
+| options.method    | http method, default `GET`                     |
+| options.grantType | OAuth2 grant type, default `client_credential` |
+
+return `Object` of access token
+
+### request(options)
+
+request wechat api with access token by short url without base url
+
+| params  |                 description                 |
+| ------- | ------------------------------------------- |
+| options | usage like [axios], but aliases NOT support |
+
+return response data of wechat api
 
 ## example
 
@@ -63,7 +100,7 @@ console.log(decrypted);
 
 ### config
 
-Add git ignored `config.json` to project directory as:
+Add git ignored `test/config.json` as:
 
 ```json
 {
@@ -94,3 +131,6 @@ Success output like this:
 
 [code2Session]: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
 [signature]: https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/signature.html
+[access token]: https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
+[cache-manager]: https://github.com/BryanDonovan/node-cache-manager
+[axios]: https://github.com/axios/axios

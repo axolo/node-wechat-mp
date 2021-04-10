@@ -1,6 +1,6 @@
 {
   "name": "@axolo/node-wechat-mp",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Wechat mini program SDK for Node.js.",
   "main": "src/index.js",
   "scripts": {
@@ -28,6 +28,7 @@
     "eslint-config-egg": "^9.0.0"
   },
   "dependencies": {
-    "axios": "^0.21.1"
+    "axios": "^0.21.1",
+    "cache-manager": "^3.4.3"
   }
 }

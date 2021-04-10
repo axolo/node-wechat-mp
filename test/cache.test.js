@@ -5,4 +5,5 @@ const config = require('./config');
 
 const wechatMp = new WechatMp(config);
 
-console.log(wechatMp);
+wechatMp.cache.set('now', Date.now());
+wechatMp.cache.get('now').then(res => console.log(res));

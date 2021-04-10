@@ -1,7 +1,7 @@
 'use strict';
 
-const config = require('../config');
 const WechatMp = require('../src');
+const config = require('./config');
 
 const wechatMp = new WechatMp(config);
 

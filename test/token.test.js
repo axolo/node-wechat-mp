@@ -5,4 +5,6 @@ const config = require('./config');
 
 const wechatMp = new WechatMp(config);
 
-console.log(wechatMp);
+wechatMp.token().then(res => {
+  console.log(res);
+});
