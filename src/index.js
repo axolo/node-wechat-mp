@@ -14,7 +14,7 @@ class WechatMp {
       appId: '', // Wechat miniprogram appId
       appSecret: '', // Wechat miniprogram appSecret
       url: {
-        base: 'https://api.weixin.qq.com/cgi-bin',
+        base: 'https://api.weixin.qq.com',
         token: 'https://api.weixin.qq.com/cgi-bin/token',
         code2session: 'https://api.weixin.qq.com/sns/jscode2session',
       },
